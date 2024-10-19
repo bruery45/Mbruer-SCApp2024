@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"errors"
-
-	"fmt"
 )
 
 func GetAllFolders() []Folder {
@@ -30,41 +28,32 @@ func (f *driver) GetFoldersByOrgID(orgID uuid.UUID) []Folder {
 
 func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, error) {
 
-	inOrg := false
-	folderExists := false
-
 	folders := f.folders
 
-	parentPath, inOrg, folderExists = f.getPath(name)
+	parentPath, inOrg, folderExists := f.getPath(orgID, name)
 
-	res := []Folder{}
-	for _, folder := range folders {
-
-		// checking folder existence for error handling
-		if folder.Name == name {
-			folderExists = true
-
-			if folder.OrgId == orgID {
-				inOrg = true
-			}
-		}
-
-		// Folder must belong to same organisation
-		if folder.OrgId == orgID {
-
-			if isChild(name, folder) {
-				res = append(res, folder)
-			}
-		}
-	}
-
+	// checking folder existence
 	if !folderExists {
 
 		return nil, errors.New("error: folder does not exist")
 	}
 
+	// checking existence in organisation
+	// also returns if organisation does not exist
 	if !inOrg {
 		return nil, errors.New("error: no such folder in specified organisation")
+	}
+
+	res := []Folder{}
+	for _, folder := range folders {
+
+		// Folder must belong to same organisation
+		if folder.OrgId == orgID {
+
+			if isChild(parentPath, folder) {
+				res = append(res, folder)
+			}
+		}
 	}
 
 	return res, nil
@@ -74,18 +63,14 @@ func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, err
 
 func isChild(parentPath string, childCandidate Folder) bool {
 
-	print("------------------------\n")
-	print(childCandidate.Paths)
-	print(" vs " + parentPath + " \n")
 	// checking if candidate child is the parent
 	if childCandidate.Paths == parentPath {
 		return false
 	}
 
-	// checking if file path includes parent candidate
-	// adding '.' for similarly named file paths
+	// checking if file path includes parent candidate filepath
 	if strings.HasPrefix(childCandidate.Paths, parentPath+".") {
-		fmt.Print("hi")
+
 		return true
 	}
 
@@ -102,18 +87,20 @@ func (f *driver) getPath(orgID uuid.UUID, name string) (string, bool, bool) {
 
 	for _, folder := range folders {
 
-		// checking folder existence for error handling
+		// checking correct folder
 		if folder.Name == name {
 
 			folderExists = true
 
+			// checking correct organisation
 			if folder.OrgId == orgID {
 
 				inOrg = true
-			}
 
-			filepath = folder.Paths
-			break
+				// collect filepath
+				filepath = folder.Paths
+				break
+			}
 		}
 	}
 
