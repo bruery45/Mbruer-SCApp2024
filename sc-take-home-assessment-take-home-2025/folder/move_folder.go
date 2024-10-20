@@ -11,8 +11,8 @@ func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder,
 
 	/*
 		Added orgID to method signature as, otherwise, edge case of two different
-		organisations both having folders with same names as'dst' and 'name'
-		are not handled
+		organisations both having folders (with same names as 'dst' and 'name')
+		is not handled.
 	*/
 
 	folders := f.folders
