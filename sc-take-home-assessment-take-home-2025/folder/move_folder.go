@@ -10,10 +10,9 @@ import (
 func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder, error) {
 
 	/*
-		As the method signature does not contain orgIDs, we assume that only one
-		instance of name and dst occur within the file structure.
-
-		Otherwise, we would implement explicit checking when getting their folders
+		Added orgID to method signature as, otherwise, edge case of two different
+		organisations both having folders with same names as'dst' and 'name'
+		are not handled
 	*/
 
 	// checking if moving folder into itself
