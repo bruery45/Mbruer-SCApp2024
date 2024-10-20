@@ -5,6 +5,7 @@ import (
 
 	"github.com/georgechieng-sc/interns-2022/folder"
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_folder_MoveFolder(t *testing.T) {
@@ -60,6 +61,14 @@ func Test_folder_MoveFolder(t *testing.T) {
 		{Name: "b", Paths: "f.k.b", OrgId: orgID_B},
 		{Name: "z", Paths: "z", OrgId: orgID_B},
 	}
+
+	// error messages
+	sameFolderError := "error: cannot move a folder to itself"
+	dstExistsError := "error: destination folder does not exist"
+	srcExistsError := "error: source folder does not exist"
+	dstOrgIDError := "error: cannot move a folder to a different organization"
+	srcOrgIDError := "error: cannot move a folder from a different organization"
+	childError := "error: cannot move a folder to a child of itself"
 
 	tests := [...]struct {
 		name         string
@@ -129,7 +138,7 @@ func Test_folder_MoveFolder(t *testing.T) {
 				{Name: "a", Paths: "a", OrgId: orgID_A},
 
 				{Name: "b", Paths: "a.b", OrgId: orgID_A},
-				{Name: "c", Paths: "a.c", OrgId: orgID_A},
+				{Name: "c", Paths: "a.b.c", OrgId: orgID_A},
 
 				{Name: "be", Paths: "a.be", OrgId: orgID_A},
 				{Name: "ce", Paths: "a.be.ce", OrgId: orgID_A},
@@ -174,6 +183,7 @@ func Test_folder_MoveFolder(t *testing.T) {
 
 				{Name: "k", Paths: "f.k", OrgId: orgID_B},
 				{Name: "b", Paths: "f.k.b", OrgId: orgID_B},
+
 				{Name: "z", Paths: "z", OrgId: orgID_B},
 			},
 			wantError: false,
@@ -183,7 +193,7 @@ func Test_folder_MoveFolder(t *testing.T) {
 			orgID:      orgID_A,
 			sourceName: "b",
 			dstName:    "e",
-			folders:    sampleFolders_A,
+			folders:    sampleFolders_B,
 			want: []folder.Folder{
 
 				// org_A
@@ -252,6 +262,16 @@ func Test_folder_MoveFolder(t *testing.T) {
 				{Name: "z", Paths: "z", OrgId: orgID_B},
 			},
 			wantError: false,
+		},
+
+		{
+			name:       "Source is already direct child",
+			orgID:      orgID_A,
+			sourceName: "b",
+			dstName:    "a",
+			folders:    sampleFolders_B,
+			want:       sampleFolders_B,
+			wantError:  false,
 		},
 
 		{
@@ -324,7 +344,7 @@ func Test_folder_MoveFolder(t *testing.T) {
 				{Name: "j", Paths: "z.f.j", OrgId: orgID_B},
 
 				{Name: "k", Paths: "z.f.k", OrgId: orgID_B},
-				{Name: "b", Paths: "z.f.b", OrgId: orgID_B},
+				{Name: "b", Paths: "z.f.k.b", OrgId: orgID_B},
 				{Name: "z", Paths: "z", OrgId: orgID_B},
 			},
 			wantError: false,
@@ -333,13 +353,124 @@ func Test_folder_MoveFolder(t *testing.T) {
 		// INVALID TEST INPUTS
 
 		{
-			name:       "Moving folder with children within same folder",
-			orgID:      orgID_A,
-			sourceName: "d",
-			dstName:    "b",
-			folders:    sampleFolders_A,
-			want:       []folder.Folder{},
-			wantError:  false,
+			name:         "Moving folder to itself",
+			orgID:        orgID_A,
+			sourceName:   "a",
+			dstName:      "a",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: sameFolderError,
+		},
+
+		{
+			name:         "Destination does not exist",
+			orgID:        orgID_A,
+			sourceName:   "a",
+			dstName:      "fakeDestination",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: dstExistsError,
+		},
+
+		{
+			name:         "Source does not exist",
+			orgID:        orgID_A,
+			sourceName:   "fakeSource",
+			dstName:      "a",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: srcExistsError,
+		},
+
+		{
+			name:         "Destination in other org",
+			orgID:        orgID_A,
+			sourceName:   "a",
+			dstName:      "i",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: dstOrgIDError,
+		},
+
+		{
+			name:         "Source in other org",
+			orgID:        orgID_B,
+			sourceName:   "a",
+			dstName:      "h",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: srcOrgIDError,
+		},
+
+		{
+			name:         "Destination in other org, shared source identifier",
+			orgID:        orgID_A,
+			sourceName:   "z",
+			dstName:      "h",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: dstOrgIDError,
+		},
+
+		{
+			name:         "Source in other org, shared destination identifier",
+			orgID:        orgID_A,
+			sourceName:   "h",
+			dstName:      "z",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: srcOrgIDError,
+		},
+
+		{
+			name:         "Organisation not in folders",
+			orgID:        orgID_C,
+			sourceName:   "h",
+			dstName:      "z",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: dstOrgIDError, //checks this first
+		},
+
+		{
+			name:         "Moving folder into child, root",
+			orgID:        orgID_A,
+			sourceName:   "a",
+			dstName:      "b",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: childError,
+		},
+
+		{
+			name:         "Moving folder into child, child",
+			orgID:        orgID_A,
+			sourceName:   "b",
+			dstName:      "c",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: childError,
+		},
+
+		{
+			name:         "Moving folder into descendent, root",
+			orgID:        orgID_A,
+			sourceName:   "a",
+			dstName:      "c",
+			folders:      sampleFolders_B,
+			want:         sampleFolders_B,
+			wantError:    true,
+			errorMessage: childError,
 		},
 	}
 
@@ -348,6 +479,32 @@ func Test_folder_MoveFolder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := folder.NewDriver(tt.folders)
 			get, err := f.MoveFolder(tt.sourceName, tt.dstName, tt.orgID)
+
+			// testing expected error for invalid input
+			if tt.wantError {
+
+				// no error
+				if err == nil {
+					t.Errorf("error expected")
+
+					// wrong error
+				} else if tt.errorMessage != err.Error() {
+					t.Errorf("expected error message '%s' \nGot: '%s'", tt.errorMessage, err.Error())
+				}
+
+				// testing valid inputs
+			} else {
+
+				// unexpected error
+				if err != nil {
+					t.Errorf("no error expected \nreceived: %s", err.Error())
+
+					// matching actual output vs expected output
+				} else {
+
+					assert.ElementsMatch(t, tt.want, get)
+				}
+			}
 
 		})
 	}

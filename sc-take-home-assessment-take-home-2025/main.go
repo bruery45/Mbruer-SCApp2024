@@ -29,6 +29,8 @@ func main() {
 		{Name: "d", Paths: "a.d", OrgId: orgID_A},
 		{Name: "e", Paths: "a.d.e", OrgId: orgID_A},
 
+		{Name: "z", Paths: "z", OrgId: orgID_A},
+
 		// org_B
 		{Name: "f", Paths: "f", OrgId: orgID_B},
 
@@ -40,6 +42,7 @@ func main() {
 
 		{Name: "k", Paths: "f.k", OrgId: orgID_B},
 		{Name: "b", Paths: "f.k.b", OrgId: orgID_B},
+		{Name: "z", Paths: "z", OrgId: orgID_B},
 	}
 
 	// example usage
@@ -47,7 +50,7 @@ func main() {
 	// orgFolder := folderDriver.GetFoldersByOrgID(orgID)
 	// childFolder, err := folderDriver.GetAllChildFolders(orgID_B, "b")
 
-	newFolders, err := folderDriver.MoveFolder("g", "j")
+	newFolders, err := folderDriver.MoveFolder("b", "a", orgID_A)
 
 	if err == nil {
 		folder.PrettyPrint(newFolders)

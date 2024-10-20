@@ -15,10 +15,12 @@ func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder,
 		are not handled
 	*/
 
+	folders := f.folders
+
 	// checking if moving folder into itself
 	if name == dst {
 
-		return nil, errors.New("error: cannot move a folder to itself")
+		return folders, errors.New("error: cannot move a folder to itself")
 	}
 
 	// getting desired folders
@@ -27,38 +29,39 @@ func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder,
 
 	// checking if destination folder exists
 	if !destExists {
-		return nil, errors.New("error: destination folder does not exist in organisation")
+		return folders, errors.New("error: destination folder does not exist")
 	}
 
 	// checking if source folder exists
 	if !sourceExists {
-		return nil, errors.New("error: source folder does not exist in organisation")
+		return folders, errors.New("error: source folder does not exist")
 	}
 
-	// checking if orgIDs match
-	if source.OrgId != destination.OrgId {
+	// checking if dest orgIDs match
+	if orgID != destination.OrgId {
 
-		return nil, errors.New("error: cannot move a folder to a different organization")
+		return folders, errors.New("error: cannot move a folder to a different organization")
+	}
+
+	// checking if source orgIDs match
+	if orgID != source.OrgId {
+
+		return folders, errors.New("error: cannot move a folder from a different organization")
 	}
 
 	// checking if moving folder to its own child
 	if isChild(source.Paths, destination) {
 
-		return nil, errors.New("error: cannot move a folder to a child of itself")
+		return folders, errors.New("error: cannot move a folder to a child of itself")
 	}
 
-	folders := f.folders
+	res := []Folder{}
 
-	// current implemntation changes f.folders directly
-	// if that is undesired uncomment out the following lines
-	// instead iterate over res and return it
-	// res := make([]Folder, len(folders))
-	// copy(res, folders)
-
-	for i, folder := range folders {
+	for _, folder := range folders {
 
 		// skip organisations folders from other organisations
 		if source.OrgId != folder.OrgId {
+			res = append(res, folder)
 			continue
 		}
 
@@ -69,11 +72,15 @@ func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder,
 
 			newPath := destination.Paths + "." + relativePath
 
-			folders[i].Paths = newPath
+			folder.Paths = newPath
+			// folders[i].Paths = newPath
+
 		}
+
+		res = append(res, folder)
 	}
 
-	return folders, nil
+	return res, nil
 
 }
 
@@ -92,6 +99,7 @@ func (f *driver) getFolder(name string, orgID uuid.UUID) (Folder, bool) {
 			found = true
 			folder = item
 
+			// continue to collect orgID if invalid
 			if orgID == item.OrgId {
 
 				break

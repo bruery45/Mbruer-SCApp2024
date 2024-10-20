@@ -264,7 +264,7 @@ func Test_folder_GetAllChildFolders(t *testing.T) {
 		},
 
 		{
-			name:         "Organisation not presentt",
+			name:         "Organisation not present",
 			orgID:        orgID_C,
 			folderName:   "a",
 			folders:      sampleFolders_A,
@@ -292,7 +292,7 @@ func Test_folder_GetAllChildFolders(t *testing.T) {
 
 				// no error
 				if err == nil {
-					t.Errorf("error Expected")
+					t.Errorf("error expected")
 
 					// wrong error
 				} else if tt.errorMessage != err.Error() {
