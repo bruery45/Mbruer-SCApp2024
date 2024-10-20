@@ -2,6 +2,7 @@ package folder
 
 import (
 	"errors"
+	"strings"
 )
 
 func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
@@ -16,7 +17,7 @@ func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
 	// checking if moving folder into itself
 	if name == dst {
 
-		return nil, errors.New("Error: Cannot move a folder to itself")
+		return nil, errors.New("error: cannot move a folder to itself")
 	}
 
 	// getting desired folders
@@ -24,27 +25,52 @@ func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
 	source, sourceExists := f.getFolder(name)
 
 	// checking if destination folder exists
-
 	if !destExists {
-		return nil, errors.New("Error: Destination folder does not exist")
+		return nil, errors.New("error: destination folder does not exist")
 	}
 
 	// checking if source folder exists
-
 	if !sourceExists {
-		return nil, errors.New("Error: Source folder does not exist")
+		return nil, errors.New("error: source folder does not exist")
 	}
 
 	// checking if orgIDs match
-
 	if source.OrgId != destination.OrgId {
 
-		return nil, errors.New("Error: Cannot move a folder to a different organization")
+		return nil, errors.New("error: cannot move a folder to a different organization")
 	}
 
-	// folders := f.folders
+	// checking if moving folder to its own child
+	if isChild(destination.Paths, source) {
 
-	// res := []Folder{}
+		return nil, errors.New("error: cannot move a folder to a child of itself")
+	}
+
+	folders := f.folders
+
+	res := make([]Folder, len(folders))
+
+	copy(res, folders)
+
+	for _, folder := range folders {
+
+		// skip organisations folders from other organisations
+		if source.OrgId != folder.OrgId {
+			continue
+		}
+
+		// moving current folder or child folder into destination
+		if folder.Name == source.Name || isChild(source.Paths, folder) {
+
+			relativePath := subPath(folder, name)
+
+			newPath := destination.Paths + "." + relativePath
+
+			folder.Paths = newPath
+		}
+	}
+
+	return res, nil
 
 }
 
@@ -57,12 +83,31 @@ func (f *driver) getFolder(name string) (Folder, bool) {
 
 	for _, item := range folders {
 
-		//
+		// if same name, return
 		if item.Name == name {
 			found = true
 			folder = item
+			break
 		}
 	}
 
 	return folder, found
+}
+
+func subPath(folder Folder, parent string) string {
+
+	pathFolders := strings.Split(folder.Paths, ".")
+
+	var subPath string
+
+	// finding relative path of folder in its path
+	for index, folder := range pathFolders {
+
+		if parent == folder {
+
+			subPath = strings.Join(pathFolders[index:], ".")
+		}
+	}
+
+	return subPath
 }

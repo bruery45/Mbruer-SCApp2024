@@ -160,8 +160,8 @@ func Test_folder_GetAllChildFolders(t *testing.T) {
 	}
 
 	// error messages
-	fileError := "Error: folder does not exist"
-	orgError := "Error: no such folder in specified organisation"
+	fileError := "error: folder does not exist"
+	orgError := "error: no such folder in specified organisation"
 
 	tests := [...]struct {
 		name         string

@@ -35,13 +35,13 @@ func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, err
 	// checking folder existence
 	if !folderExists {
 
-		return nil, errors.New("Error: folder does not exist")
+		return nil, errors.New("error: folder does not exist")
 	}
 
 	// checking existence in organisation
 	// also returns if organisation does not exist
 	if !inOrg {
-		return nil, errors.New("Error: no such folder in specified organisation")
+		return nil, errors.New("error: no such folder in specified organisation")
 	}
 
 	res := []Folder{}
