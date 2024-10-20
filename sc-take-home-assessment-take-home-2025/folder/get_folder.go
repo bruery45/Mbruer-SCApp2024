@@ -30,7 +30,7 @@ func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, err
 
 	folders := f.folders
 
-	parentPath, inOrg, folderExists := f.getPath(orgID, name)
+	parentPath, inOrg, folderExists := f.GetPath(orgID, name)
 
 	// checking folder existence
 	if !folderExists {
@@ -77,7 +77,7 @@ func isChild(parentPath string, childCandidate Folder) bool {
 	return false
 }
 
-func (f *driver) getPath(orgID uuid.UUID, name string) (string, bool, bool) {
+func (f *driver) GetPath(orgID uuid.UUID, name string) (string, bool, bool) {
 
 	inOrg := false
 	folderExists := false

@@ -1,6 +1,7 @@
 package folder_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/georgechieng-sc/interns-2022/folder"
@@ -453,10 +454,16 @@ func Test_folder_getPath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := folder.NewDriver(tt.folders)
-			get := f.getPath(tt.orgID, tt.folderName)
+			path, getOrg, getFolderExists := f.GetPath(tt.orgID, tt.folderName)
+
+			orgErrorMessage := fmt.Sprintf("Expected inOrg: %t, received %t", tt.wantInOrg, getOrg)
+			folderErrorMessage := fmt.Sprintf("Expected folderExists: %t, received %t",
+				tt.wantFolderExists, getFolderExists)
 
 			// matching actual output vs expected output
-			assert.ElementsMatch(t, tt.want, get, "Folders do not match")
+			assert.Equal(t, tt.want, path, "Folders do not match")
+			assert.Equal(t, tt.wantInOrg, getOrg, orgErrorMessage)
+			assert.Equal(t, tt.wantFolderExists, getFolderExists, folderErrorMessage)
 		})
 	}
 }
