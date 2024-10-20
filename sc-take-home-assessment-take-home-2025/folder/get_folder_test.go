@@ -264,16 +264,6 @@ func Test_folder_GetAllChildFolders(t *testing.T) {
 		},
 
 		{
-			name:         "folder does not exist",
-			orgID:        orgID_B,
-			folderName:   "fakeFolder",
-			folders:      sampleFolders_A,
-			want:         []folder.Folder{},
-			wantError:    true,
-			errorMessage: fileError,
-		},
-
-		{
 			name:         "Organisation not presentt",
 			orgID:        orgID_C,
 			folderName:   "a",

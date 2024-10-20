@@ -45,10 +45,12 @@ func main() {
 	// example usage
 	folderDriver := folder.NewDriver(res)
 	// orgFolder := folderDriver.GetFoldersByOrgID(orgID)
-	childFolder, err := folderDriver.GetAllChildFolders(orgID_B, "b")
+	// childFolder, err := folderDriver.GetAllChildFolders(orgID_B, "b")
+
+	newFolders, err := folderDriver.MoveFolder("g", "j")
 
 	if err == nil {
-		folder.PrettyPrint(childFolder)
+		folder.PrettyPrint(newFolders)
 	} else {
 		log.Fatalf("%v", err)
 	}

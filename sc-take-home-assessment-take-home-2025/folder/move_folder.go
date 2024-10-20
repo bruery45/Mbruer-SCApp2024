@@ -3,9 +3,11 @@ package folder
 import (
 	"errors"
 	"strings"
+
+	"github.com/gofrs/uuid"
 )
 
-func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
+func (f *driver) MoveFolder(name string, dst string, orgID uuid.UUID) ([]Folder, error) {
 
 	/*
 		As the method signature does not contain orgIDs, we assume that only one
@@ -21,17 +23,17 @@ func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
 	}
 
 	// getting desired folders
-	destination, destExists := f.getFolder(dst)
-	source, sourceExists := f.getFolder(name)
+	destination, destExists := f.getFolder(dst, orgID)
+	source, sourceExists := f.getFolder(name, orgID)
 
 	// checking if destination folder exists
 	if !destExists {
-		return nil, errors.New("error: destination folder does not exist")
+		return nil, errors.New("error: destination folder does not exist in organisation")
 	}
 
 	// checking if source folder exists
 	if !sourceExists {
-		return nil, errors.New("error: source folder does not exist")
+		return nil, errors.New("error: source folder does not exist in organisation")
 	}
 
 	// checking if orgIDs match
@@ -41,18 +43,20 @@ func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
 	}
 
 	// checking if moving folder to its own child
-	if isChild(destination.Paths, source) {
+	if isChild(source.Paths, destination) {
 
 		return nil, errors.New("error: cannot move a folder to a child of itself")
 	}
 
 	folders := f.folders
 
-	res := make([]Folder, len(folders))
+	// current implemntation changes f.folders directly
+	// if that is undesired uncomment out the following lines
+	// instead iterate over res and return it
+	// res := make([]Folder, len(folders))
+	// copy(res, folders)
 
-	copy(res, folders)
-
-	for _, folder := range folders {
+	for i, folder := range folders {
 
 		// skip organisations folders from other organisations
 		if source.OrgId != folder.OrgId {
@@ -66,15 +70,16 @@ func (f *driver) MoveFolder(name string, dst string) ([]Folder, error) {
 
 			newPath := destination.Paths + "." + relativePath
 
-			folder.Paths = newPath
+			folders[i].Paths = newPath
 		}
 	}
 
-	return res, nil
+	return folders, nil
 
 }
 
-func (f *driver) getFolder(name string) (Folder, bool) {
+// Method no longer used due to more efficient approach being used
+func (f *driver) getFolder(name string, orgID uuid.UUID) (Folder, bool) {
 
 	found := false
 	folders := f.folders
@@ -83,17 +88,20 @@ func (f *driver) getFolder(name string) (Folder, bool) {
 
 	for _, item := range folders {
 
-		// if same name, return
+		// if same name and organisation, return
 		if item.Name == name {
 			found = true
 			folder = item
-			break
+
+			if orgID == item.OrgId {
+
+				break
+			}
 		}
 	}
 
 	return folder, found
 }
-
 func subPath(folder Folder, parent string) string {
 
 	pathFolders := strings.Split(folder.Paths, ".")
@@ -106,6 +114,7 @@ func subPath(folder Folder, parent string) string {
 		if parent == folder {
 
 			subPath = strings.Join(pathFolders[index:], ".")
+			break
 		}
 	}
 

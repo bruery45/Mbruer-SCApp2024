@@ -107,7 +107,7 @@ func GetSampleData() []Folder {
 	_, filename, _, _ := runtime.Caller(0)
 	fmt.Println(filename)
 	basePath := filepath.Dir(filename)
-	filePath := filepath.Join(basePath, "sample.json")
+	filePath := filepath.Join(basePath, "simpleSample.json")
 
 	fmt.Println(filePath)
 

@@ -47,7 +47,7 @@ func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, err
 	res := []Folder{}
 	for _, folder := range folders {
 
-		// Folder must belong to same organisation
+		// folder must belong to same organisation
 		if folder.OrgId == orgID {
 
 			if isChild(parentPath, folder) {
@@ -58,7 +58,6 @@ func (f *driver) GetAllChildFolders(orgID uuid.UUID, name string) ([]Folder, err
 
 	return res, nil
 
-	// return []Folder{}
 }
 
 func isChild(parentPath string, childCandidate Folder) bool {
